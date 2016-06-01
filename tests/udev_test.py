@@ -55,10 +55,10 @@ class TestDrivers(object):
         """
         If a device is character or block then libudev supplies no driver.
 
-        If the device has a parent, then the parent's driver is the same
-        as is obtained from the device's major number and /proc/devices.
-        If the device has no parent, then the device may still have a driver
-        in /proc/devices.
+        If the device has a non-block ancestor, then this ancestor's driver
+        is the same as is obtained from the device's major number and
+        /proc/devices. If the device has no such ancestor, then the device may
+        still have a driver in /proc/devices.
         """
         assert device.driver is None
 
@@ -68,6 +68,8 @@ class TestDrivers(object):
 
         assert major in _PROCDEV.majors(subsystem)
 
-        parent = device.parent
-        if parent is not None:
-            assert parent.driver == _PROCDEV.get_driver(subsystem, major)
+        driver_devices = \
+           (d for d in device.ancestors if d.subsystem not in ('block', 'char'))
+        driver_device = next(driver_devices, None)
+        if driver_device is not None:
+            assert driver_device.driver == _PROCDEV.get_driver(subsystem, major)
