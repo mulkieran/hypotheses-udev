@@ -69,3 +69,38 @@ class TestDrivers(object):
         assert major in _PROCDEV.majors(subsystem)
 
         assert _PROCDEV.get_driver(subsystem, major) is not None
+
+
+class TestSCSI(object):
+    """
+    Test properties of SCSI devices.
+    """
+    # pylint: disable=too-few-public-methods
+
+    @given(_CONTEXT_STRATEGY)
+    @settings(max_examples=1)
+    def test_one_disk_child(self, context):
+        """
+        Test that every device with type scsi_device has only one disk
+        descendant.
+        """
+        scsi_devices = context.list_devices().match_property(
+           'DEVTYPE',
+           'scsi_device'
+        )
+
+        def func(dev):
+            """
+            Returns an enumerate for all child block disk devices of dev.
+
+            :param Device dev: the parent device
+            :rtype: Enumerator
+            :returns: an enumerator for this subset of devices.
+            """
+            return context.list_devices(
+               subsystem='block',
+               DEVTYPE='disk',
+               parent=dev
+            )
+
+        assert all(len(list(func(d))) in (0, 1) for d in scsi_devices)
