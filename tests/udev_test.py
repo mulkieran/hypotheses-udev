@@ -23,6 +23,8 @@ Test properties of udev.
 
 import os
 
+from functools import reduce # pylint: disable=redefined-builtin
+
 from hypothesis import given
 from hypothesis import settings
 from hypothesis import strategies
@@ -102,3 +104,26 @@ class TestSCSI(object):
             )
 
         assert all(len(list(func(d))) in (0, 1) for d in scsi_devices)
+
+
+class TestUdevSubsystem(object):
+    """
+    Test relation of devices w/out subsystems to those with in libudev.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def test_all_devices(self):
+        """
+        Verify that udev fails to list exactly those devices that have no
+        subsystem.
+        """
+        devices = frozenset(_CONTEXT.list_devices())
+        all_devices = frozenset(reduce(
+           lambda x, y: x + y,
+           (list(dev.ancestors) for dev in devices)
+        ))
+        assert all(dev.subsystem is not None for dev in devices)
+        assert devices != all_devices
+
+        difference = all_devices - devices
+        assert all(dev.subsystem is None for dev in difference)
