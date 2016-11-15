@@ -77,14 +77,12 @@ class TestSCSI(object):
     """
     # pylint: disable=too-few-public-methods
 
-    @given(_CONTEXT_STRATEGY)
-    @settings(max_examples=1)
-    def test_one_disk_child(self, context):
+    def test_one_disk_child(self):
         """
         Test that every device with type scsi_device has only one disk
         descendant.
         """
-        scsi_devices = context.list_devices().match_property(
+        scsi_devices = _CONTEXT.list_devices().match_property(
            'DEVTYPE',
            'scsi_device'
         )
@@ -97,7 +95,7 @@ class TestSCSI(object):
             :rtype: Enumerator
             :returns: an enumerator for this subset of devices.
             """
-            return context.list_devices(
+            return _CONTEXT.list_devices(
                subsystem='block',
                DEVTYPE='disk',
                parent=dev
